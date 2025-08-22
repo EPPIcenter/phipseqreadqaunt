@@ -3,7 +3,7 @@ process BWA_ALIGN_PAIRED {
 
     label "process_medium"
 
-	publishDir "${params.outdir}/$pair_id", mode: 'copy', overwrite: true
+	publishDir "${params.outdir}/$pair_id/bwa", mode: 'copy', overwrite: true
 
 	tag "bwa: $pair_id"
 
@@ -13,7 +13,7 @@ process BWA_ALIGN_PAIRED {
     tuple path(bwa_index), val(pair_id), path(reads_r1), path(reads_r2)
 
 	output:
-    tuple val (pair_id), path ("${pair_id}.sorted.bam"), path ("${pair_id}.sorted.bam.bai"), emit: id_with_sorted_bam
+    tuple val (pair_id), val("bwa"), path ("${pair_id}.sorted.bam"), path ("${pair_id}.sorted.bam.bai"), emit: id_with_sorted_bam
 
 	script:
 

@@ -1,13 +1,16 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+include { BOWTIE2_ALIGN_PAIRED } from '../../modules/local/bowtie2_align'
+include { BOWTIE2_INDEX } from '../../modules/local/bowtie2_index'
 include { BWA_ALIGN_PAIRED } from '../../modules/local/bwa_align'
 include { BWA_INDEX } from '../../modules/local/bwa_index'
 include { CUTADAPT } from '../../modules/local/cutadapt'
 include { FASTP } from '../../modules/local/fastp'
 include { KALLISTO_INDEX } from '../../modules/local/kallisto_index'
 include { KALLISTO_QUANT_PAIRED } from '../../modules/local/kallisto_quant'
-include { MAPPING_STATISTICS } from '../../modules/local/mapping_statistics'
+include { MAPPING_STATISTICS as MAPPING_STATISTICS_BWA } from '../../modules/local/mapping_statistics'
+include { MAPPING_STATISTICS as MAPPING_STATISTICS_BOWTIE2 } from '../../modules/local/mapping_statistics'
 
 
 workflow PROCESS_PHIPSEQ_READS_COUNTS {
@@ -17,6 +20,7 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
     output_dir
     do_kallisto
     do_bwa
+    do_bowtie2
     forward_linker_5_3
     reverse_linker_5_3
 
@@ -59,7 +63,21 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
         // Call the process with the *single* tuple channel
         BWA_ALIGN_PAIRED(bwa_align_in)
 
-        BWA_ALIGN_PAIRED.out.id_with_sorted_bam | MAPPING_STATISTICS
+        BWA_ALIGN_PAIRED.out.id_with_sorted_bam | MAPPING_STATISTICS_BWA
+    }
+
+    if(do_bowtie2){
+        BOWTIE2_INDEX(file(targets_fnp))
+
+        // Combine index list with trimmed pairs into 4-tuples
+        bowtie2_align_in = BOWTIE2_INDEX.out.bowtie2_index
+            .combine(trimmed_pairs)                     // (idx_list) x (id, r1, r2)
+            .map { bowtie2_idx, id, r1, r2 -> tuple(bowtie2_idx, id, r1, r2) }
+
+        // Call the process with the *single* tuple channel
+        BOWTIE2_ALIGN_PAIRED(bowtie2_align_in)
+
+        BOWTIE2_ALIGN_PAIRED.out.id_with_sorted_bam | MAPPING_STATISTICS_BOWTIE2
     }
 }
 

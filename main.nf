@@ -12,12 +12,12 @@ main:
     if (params.reads == null  || params.targets_fnp == null || params.outdir == null || params.forward_linker_5_3 == null || params.reverse_linker_5_3 == null) {
         error "flags '--reads', '--targets_fnp', '--forward_linker_5_3', '--reverse_linker_5_3', and '--outdir' must be specified!"
     }
-    if(params.do_bwa == null && params.do_kallisto == null){
-        error "have to have at least one of --do_bwa or --do_kallisto"
+    if(params.do_bwa == null && params.do_kallisto == null && params.do_bowtie2 == null){
+        error "have to have at least one of --do_bwa, --do_kallisto, or --do_bowtie2"
     }
     do_kallito = params.do_kallisto == null ? false : true
     do_bwa = params.do_bwa == null ? false : true
-
+    do_bowtie2 = params.do_bowtie2 == null ? false : true
     // Create output directory if not exists and overwrite if it does
     def results_dir_obj = file(params.outdir)
     if (results_dir_obj.exists()){
@@ -26,12 +26,13 @@ main:
     results_dir_obj.mkdirs()
 
     PROCESS_PHIPSEQ_READS_COUNTS(params.reads,
-    params.targets_fnp,
-    params.outdir,
-    do_kallito,
-    do_bwa,
-    params.forward_linker_5_3,
-    params.reverse_linker_5_3)
+                                    params.targets_fnp,
+                                    params.outdir,
+                                    do_kallito,
+                                    do_bwa,
+                                    do_bowtie2,
+                                    params.forward_linker_5_3,
+                                    params.reverse_linker_5_3)
 
 }
 

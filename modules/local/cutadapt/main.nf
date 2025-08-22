@@ -22,6 +22,9 @@ process CUTADAPT {
     path("${pair_id}.cutadapt.log"), emit: cutadapt_log
 
 	script:
+
+    def extra_args = task.ext.args ?: ""
+
 	"""
 	#!/usr/bin/env bash
 
@@ -29,7 +32,7 @@ process CUTADAPT {
 	## module load CBI cutadapt
 
 	## cutadapt to remove phip-seq primers and poly-g tails
-	cutadapt \
+	cutadapt $extra_args\
 	    --action=trim \
         --nextseq-trim=20 \
         --discard-untrimmed \
@@ -39,7 +42,7 @@ process CUTADAPT {
         -p filtered_${pair_id}_R2.fastq.gz \
         ${reads_r1} \
         ${reads_r2} \
-        --cores ${task.cpus}
+        --cores ${task.cpus}\
         > ${pair_id}.cutadapt.log
 	"""
 }
