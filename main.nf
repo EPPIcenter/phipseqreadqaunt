@@ -9,8 +9,8 @@ workflow {
 
 main:
     // Validate inputs
-    if (params.reads == null  || params.genome_fnp == null || params.outdir == null || params.forward_linker_5_3 == null || params.reverse_linker_5_3 == null) {
-        error "flags '--reads', '--genome_fnp', '--forward_linker_5_3', '--reverse_linker_5_3', and '--outdir' must be specified!"
+    if (params.reads == null  || params.targets_fnp == null || params.outdir == null || params.forward_linker_5_3 == null || params.reverse_linker_5_3 == null) {
+        error "flags '--reads', '--targets_fnp', '--forward_linker_5_3', '--reverse_linker_5_3', and '--outdir' must be specified!"
     }
     if(params.do_bwa == null && params.do_kallisto == null){
         error "have to have at least one of --do_bwa or --do_kallisto"
@@ -26,7 +26,7 @@ main:
     results_dir_obj.mkdirs()
 
     PROCESS_PHIPSEQ_READS_COUNTS(params.reads,
-    params.genome_fnp,
+    params.targets_fnp,
     params.outdir,
     do_kallito,
     do_bwa,

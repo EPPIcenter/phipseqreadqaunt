@@ -13,7 +13,7 @@ include { MAPPING_STATISTICS } from '../../modules/local/mapping_statistics'
 workflow PROCESS_PHIPSEQ_READS_COUNTS {
     take:
     reads
-    genome_fnp
+    targets_fnp
     output_dir
     do_kallisto
     do_bwa
@@ -38,8 +38,8 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
     // kallisto
     if (do_kallisto){
         KALLISTO_INDEX(
-            file(genome_fnp),
-            file("${genome_fnp}.kallisto.idx"),
+            file(targets_fnp),
+            file("${targets_fnp}.kallisto.idx"),
             params.kallisto_kmer_size
         )
         trimmed_pairs
@@ -49,8 +49,8 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
     }
 
     if(do_bwa){
-        BWA_INDEX(file(genome_fnp))
-        
+        BWA_INDEX(file(targets_fnp))
+
         // Combine index list with trimmed pairs into 4-tuples
         bwa_align_in = BWA_INDEX.out.bwa_index
             .combine(trimmed_pairs)                     // (idx_list) x (id, r1, r2)
