@@ -43,7 +43,7 @@ process MAPPING_STATISTICS {
             cut -f 3,6  | \
             grep -e "[IDSH*]" -v >> ${pair_id}_mapping.tab && \
     cut -f 1 ${pair_id}_mapping.tab | uniq -c > ${pair_id}_mapping.filtered.summary.tab ) || \
-    ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filtered.tab && \
+    ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.tab && \
     echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filtered.summary.tab )
 
     ## 'paired' files have inclusion flag -f 67 to select [paired, properly paired, first read in pair] for quantification
@@ -55,6 +55,15 @@ process MAPPING_STATISTICS {
     ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.paired_r1.tab && \
     echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.paired_r1.summary.tab )
 
+    ## filter clipping, paired and first read in pair only
+    ( samtools view -hF 2304 ${bam_fnp} | samtools view -f 67 |\
+            cut -f 3,6  | \
+            grep -e "[SH*]" -v >> ${pair_id}_mapping.filter_clipping_paired_r1.tab && \
+    cut -f 1 ${pair_id}_mapping.filter_clipping_paired_r1.tab | uniq -c > ${pair_id}_mapping.filter_clipping_paired_r1.summary.tab ) || \
+    ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filter_clipping_paired_r1.tab && \
+    echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filter_clipping_paired_r1.summary.tab )
+
+
     ## 'paired' files have inclusion flag -f 131 to select [paired, properly paired, second read in pair] for quantification
     ## strict filter, paired and first read in pair only
     ( samtools view -hF 2304 ${bam_fnp} | samtools view -f 131 |\
@@ -64,11 +73,21 @@ process MAPPING_STATISTICS {
     ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.paired_r2.tab && \
     echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.paired_r2.summary.tab )
 
+    ## filter clipping, paired and first read in pair only
+    ( samtools view -hF 2304 ${bam_fnp} | samtools view -f 131 |\
+            cut -f 3,6  | \
+            grep -e "[SH*]" -v >> ${pair_id}_mapping.filter_clipping_paired_r2.tab && \
+    cut -f 1 ${pair_id}_mapping.filter_clipping_paired_r2.tab | uniq -c > ${pair_id}_mapping.filter_clipping_paired_r2.summary.tab ) || \
+    ( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filter_clipping_paired_r2.tab && \
+    echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.filter_clipping_paired_r2.summary.tab )
+
+
+
 	## semifiltered based on CIGAR string
 	( samtools view -F 2304 ${bam_fnp} | \
 		cut -f 3,6  | \
 		grep -e "[ID*]" -v >> ${pair_id}_mapping.semifiltered.tab && \
-	cut -f 1 ${pair_id}_mapping.tab | uniq -c > ${pair_id}_mapping.semifiltered.summary.tab ) || \
+	cut -f 1 ${pair_id}_mapping.semifiltered.tab | uniq -c > ${pair_id}_mapping.semifiltered.summary.tab ) || \
 	( echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.semifiltered.tab && \
 	echo "#${pair_id} had no good reads!" > ${pair_id}_mapping.semifiltered.summary.tab )
 
@@ -98,6 +117,16 @@ process MAPPING_STATISTICS {
     if [ "\$(wc -l < ${pair_id}_mapping.semifiltered.summary.tab)" -gt 1 ]; then
         awk 'BEGIN{OFS="\t"} NF>=2{print \$1,\$2,"filtered_indels_r1_r2"}' \
             ${pair_id}_mapping.semifiltered.summary.tab >> ${pair_id}_mapping_stats_summary.tsv
+    fi
+
+    if [ "\$(wc -l < ${pair_id}_mapping.filter_clipping_paired_r1.summary.tab)" -gt 1 ]; then
+        awk 'BEGIN{OFS="\t"} NF>=2{print \$1,\$2,"filtered_clipping_proper_pair_r1"}' \
+            ${pair_id}_mapping.filter_clipping_paired_r1.summary.tab >> ${pair_id}_mapping_stats_summary.tsv
+    fi
+
+    if [ "\$(wc -l < ${pair_id}_mapping.filter_clipping_paired_r2.summary.tab)" -gt 1 ]; then
+        awk 'BEGIN{OFS="\t"} NF>=2{print \$1,\$2,"filtered_clipping_proper_pair_r2"}' \
+            ${pair_id}_mapping.filter_clipping_paired_r2.summary.tab >> ${pair_id}_mapping_stats_summary.tsv
     fi
 
     gzip ${pair_id}_mapping_stats_summary.tsv

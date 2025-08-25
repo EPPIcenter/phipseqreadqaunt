@@ -18,6 +18,8 @@ main:
     do_kallito = params.do_kallisto == null ? false : true
     do_bwa = params.do_bwa == null ? false : true
     do_bowtie2 = params.do_bowtie2 == null ? false : true
+    do_fastp = params.do_fastp == null ? false : true
+
     // Create output directory if not exists and overwrite if it does
     def results_dir_obj = file(params.outdir)
     if (results_dir_obj.exists()){
@@ -31,6 +33,7 @@ main:
                                     do_kallito,
                                     do_bwa,
                                     do_bowtie2,
+                                    do_fastp,
                                     params.forward_linker_5_3,
                                     params.reverse_linker_5_3)
 

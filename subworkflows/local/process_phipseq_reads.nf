@@ -21,6 +21,7 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
     do_kallisto
     do_bwa
     do_bowtie2
+    do_fastap
     forward_linker_5_3
     reverse_linker_5_3
 
@@ -38,7 +39,17 @@ workflow PROCESS_PHIPSEQ_READS_COUNTS {
             tuple(id, reads_paired_fnps[0], reads_paired_fnps[1], forward_linker_5_3, reverse_linker_5_3)
             } | CUTADAPT
 
-    CUTADAPT.out.id_with_trimmed_pairs.set { trimmed_pairs }
+    CUTADAPT.out.id_with_trimmed_pairs.set { cutadapt_trimmed_pairs }
+
+    if( do_fastap){
+        cutadapt_trimmed_pairs
+            .map { id, r1, r2 -> tuple(id, r1, r2, false) }
+            | FASTP
+        FASTP.out.id_with_trimmed_pairs.set{trimmed_pairs}
+    } else {
+        cutadapt_trimmed_pairs.set{trimmed_pairs}
+    }
+
     // kallisto
     if (do_kallisto){
         KALLISTO_INDEX(
